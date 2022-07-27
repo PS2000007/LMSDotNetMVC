@@ -1,0 +1,79 @@
+﻿
+@{
+    ViewBag.Title = "Home Page";
+    Layout = null;
+}
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+
+<script type="text/javascript">
+
+    $(function () {
+        $('#CatList').multiselect({
+            includeSelectAllOption: true
+        });
+
+        $('#PubList').multiselect({
+            includeSelectAllOption: true
+        });
+
+        $('#btnSelected').click(function () {
+            var CatSelected = $("#CatList option:selected");
+            var PubSelected = $("#PubList option:selected");
+            var message = "";
+            var message2 = "";
+
+            CatSelected.each(function () {
+                message += $(this).text() + " " + $(this).val() + "\n";
+            });
+
+            PubSelected.each(function () {
+                message2 += $(this).text() + " " + $(this).val() + "\n";
+            });
+            alert(message);
+            alert(message2);
+        });
+    });
+</script>
+<div>
+    <table>
+        <tr>
+            <td><p>Select Categories :  </p></td>&nbsp; &nbsp;
+            <td></td>&nbsp;&nbsp;
+            <td>
+                <select id="CatList" multiple="multiple">
+                    @foreach (var item in Model.booklist)
+                    {
+                        <option value="@item.categoryid">@item.Category_Name</option>
+
+                    }
+                </select>
+            </td>
+        </tr>
+        <tr><td><br /></td></tr>
+        <tr>
+            <td><p>Select Publishers :  </p></td>&nbsp; &nbsp;
+            <td></td>&nbsp;&nbsp; &nbsp;
+            <td>
+                <select id="PubList" multiple="multiple">
+                    @foreach (var item in Model.booklist)
+                    {
+                        <option value="@item.publisherid">@item.Publisher_Name</option>
+
+                    }
+                </select>
+            </td>
+
+        </tr>
+        <tr>
+            <td><input type="button" id="btnSelected" value="Get Selected" /></td>
+        </tr>
+      </table>
+
+
+</div> 

@@ -1,0 +1,488 @@
+﻿
+@using Library.Models;
+@model BooksViewModule
+@using PagedList
+@using PagedList.Mvc
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    @Styles.Render("~/Content/css")
+
+    <style>
+        .c {
+            margin: auto;
+            width: 60%;
+        }
+
+        .active:active {
+            color: black
+        }
+
+        .link-dark {
+            color: black;
+        }
+
+            .link-dark:hover {
+                color: black;
+                text-decoration: none;
+            }
+
+        ul#menu li {
+            display: inline-block;
+        }
+
+        .h {
+            text-align: center;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+    <script>
+
+
+        $(function () {
+            $('#CatList').multiselect({
+                includeSelectAllOption: true
+            });
+
+            $('#PubList').multiselect({
+                includeSelectAllOption: true
+            });
+        });
+
+        var optionsVal = [];
+        $(document).ready(function () {
+
+            GetPageData(1);
+
+            $("#Reset").click(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+
+            $("#Book_Name").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+
+            })
+
+            $("#categories").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+            $("#publishers").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+
+            $("#CatList").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+            $("#PubList").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+
+            $("#pagenumber").change(function () {
+                GetPageData(1);
+            })
+
+            $("#rowofpages").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+            $("#AddBook").click(function () {
+                if ($("#bookform").valid()) {
+                AddBook();
+                }
+            })
+        })
+
+
+
+
+        function ConfirmDelete(Id, Name) {
+            $("#hiddenBookId").val(Id);
+            $("#hiddenBookName").val(Name);
+            var name = $("#hiddenBookName").val();
+            document.getElementById("bname").innerHTML = name;
+            $("#myModal").modal('show');
+        }
+
+        function DeleteBook() {
+
+            var id = $("#hiddenBookId").val();
+            $.ajax({
+                url: '/Books/deleteBook/' + id,
+                method: 'post',
+                contentType: 'application/json',
+                success: function (resp) {
+                    $("#myModal").modal('hide');
+
+                    $("#pagenumber").val(1);
+                    GetPageData(1);
+                }
+            })
+        }
+
+        function Edit(id) {
+
+            $.ajax({
+                url: '/Books/InsertBooks/' + id,
+                method: 'get',
+                //data: JSON.stringify(st),
+                contentType: 'application/json',
+                success: function (resp) {
+                    console.log(resp);
+                    $("#myPopUpForms").find("input[id='Book_Id']").val(resp.Book_Id);
+                    $("#myPopUpForms").find("input[id='Book_Name']").val(resp.Book_Name);
+                    $("#myPopUpForms").find("input[id='Book_Pages']").val(resp.Book_Pages);
+                    $("#myPopUpForms").find("input[id='Book_Price']").val(resp.Book_Price);
+                    $('#Publisher_Name').val(resp.publisherid);
+                    $('#Category_Name').val(resp.categoryid);
+                    $("#IsActive").attr("checked", resp.IsActive);
+                    $("#myPopUpForms").modal('show');
+                }
+            });
+
+
+        }
+
+        function PopInsertBooks() {
+            clear();
+            $("#myPopUpForms").modal('show');
+        }
+
+
+        function AddBook() {
+
+            var valdata = $("#bookform").serialize();
+            $.ajax({
+                url: '/Books/AddBook',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                data: valdata,
+                success: function (resp) {
+                    console.log(resp);
+                    alert(resp);
+                    clear();
+                    $("#myPopUpForms").modal('hide');
+                    $("#pagenumber").val(1);
+                    GetPageData(1);
+                },
+                error: function (response) {
+                    alert('Error!');
+                }
+            })
+        }
+
+        function clear() {
+            $("#myPopUpForms").find("input[id='Book_Id']").val("");
+            $("#myPopUpForms").find("input[id='Book_Name']").val("");
+            $("#myPopUpForms").find("input[id='Book_Pages']").val("");
+            $("#myPopUpForms").find("input[id='Book_Price']").val("");
+            $('#Publisher_Name').val("");
+            $('#Category_Name').val("");
+            $("#IsActive").attr("checked", false);
+        }
+
+        function GetPageData(pageNum, rowofpages) {
+
+            var CatSelected = $("#CatList option:selected");
+            var PubSelected = $("#PubList option:selected");
+            var Category = "";
+            var Publisher = "";
+            var Cat = [];
+            var Pub = [];
+
+            CatSelected.each(function () {
+                Cat.push($(this).val());
+            });
+
+            PubSelected.each(function () {
+                Pub.push($(this).val());
+            });
+
+            var Book_Name = $("#Book_Name").val();
+            var rowofpages = $("#rowofpages").val();
+            var pagenumber = $("#pagenumber").val();
+            $("#paged").empty();
+            var st = { "Book_Name": Book_Name, "MCategories": Cat.toString(), "MPublishers": Pub.toString(), "pagenumber": pagenumber, "rowofpages": rowofpages };
+            $.ajax({
+                url: '/Books/GetPaggedData',
+                method: 'post',
+                data: JSON.stringify(st),
+                contentType: 'application/json',
+                success: function (resp) {
+                    $("#BookList").html(resp);
+
+                    var TotalRecords = $("#totalrecords").val();
+                    var rowofpages = $("#rowofpages").val();;
+                    var lastcountofrows = $("#rowumbers").val();
+                    var TotalPages = Math.ceil(TotalRecords / rowofpages);
+                    var pageNum = $("#pagenumber").val();
+                    PaggingTemplate(TotalPages, pageNum, TotalRecords, lastcountofrows, rowofpages);
+
+
+                }
+            });
+        }
+
+
+        function PageChangeclick(pagenumber) {
+            $("#pagenumber").val(pagenumber);
+            GetPageData(1);
+        }
+
+        function PaggingTemplate(totalPage, currentPage, TotalRecords, lastcountofrows, rowofpages) {
+            var template = "";
+            var TotalPages = totalPage;
+            var CurrentPage = currentPage;
+            var PageNumberArray = Array();
+            var TotalRecords = TotalRecords;
+            var countIncr = 1;
+            var lastcountofrows = lastcountofrows;
+            //debugger
+            for (var i = currentPage; i <= totalPage; i++) {
+                PageNumberArray[0] = currentPage;
+                if (totalPage != currentPage && PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = parseInt(i) + 1;
+                }
+                countIncr++;
+            };
+
+
+            PageNumberArray = PageNumberArray.slice(0, 5);
+            var FirstPage = 1;
+            var LastPage = totalPage;
+            if (totalPage != currentPage) {
+                var ForwardOne = currentPage + 1;
+            }
+            var BackwardOne = 1;
+            if (currentPage > 1) {
+                BackwardOne = currentPage - 1;
+            }
+
+            var from = ((currentPage - 1) * rowofpages) + 1;
+            var to = (parseInt(from) + parseInt(rowofpages) - 1);
+
+            template = "<br><center><p>" + " Showing " + from + " to " + to + " out of " + TotalRecords + " records " + "</p>" + "</center>"
+
+            template = template + '<ul class="pager">' +
+                '<li class=""><a href="#" onclick="PageChangeclick(' + FirstPage + ')"><i class="fa fa-fast-backward"></i>&nbsp;First</a></li>' +
+                '<li><a href="#" onclick="PageChangeclick(' + BackwardOne + ')"><i class="glyphicon glyphicon-backward"></i></a>';
+
+            var numberingLoop = "";
+            for (var i = 0; i < PageNumberArray.length; i++) {
+                numberingLoop = numberingLoop + '<a class="page-number active" onclick="PageChangeclick(' + PageNumberArray[i] + ')" href="#">' + PageNumberArray[i] + ' &nbsp;&nbsp;</a>'
+            }
+            template = template + numberingLoop + '<a href="#" onclick="PageChangeclick(' + ForwardOne + ')" ><i class="glyphicon glyphicon-forward"></i></a></li>' +
+                '<li class=""><a href="#" onclick="PageChangeclick(' + LastPage + ')">Last&nbsp;<i class="fa fa-fast-forward"></i></a></li></ul>';
+            $("#paged").html(template);
+        }
+
+    </script>
+
+</head>
+<body>
+    <form>
+        <div class="c">
+            <div class="c table">
+                <div class="row">
+
+                    <div class="col-md-3">No. of Rows:</div>
+                    <div class="col-md-2">@Html.DropDownList("Select", Model.rownumbers, new { @id = "rowofpages", @class = "myclass" })</div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-3">Book_Name:</div>
+                    <div class="col-md-2">@Html.TextBoxFor(m => m.Book_Name, new { @id = "Book_Name", @class = "myclass" })</div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-3"><label>Category</label></div>
+                    <div class="col-md-2">
+                        @* @Html.DropDownListFor(model => model.categoryid, new SelectList(Model.categories, "Category_Id", "Category_Name"), "Select", new { @id = "categories", @class = "myclass" })*@
+                        <select id="CatList" multiple="multiple">
+                            @foreach (var item in Model.categories)
+                            {
+                                <option value="@item.Category_Id">@item.Category_Name</option>
+
+                            }
+                        </select>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-3">Publisher:</div>
+                    <div class="col-md-2">
+                        @* @Html.DropDownListFor(model => model.publisherid, new SelectList(Model.publishers, "Publisher_Id", "Publisher_Name"), "Select", new { @id = "publishers", @class = "myclass" })*@
+                        @Html.HiddenFor(model => model.pagenumber)
+                        <select id="PubList" multiple="multiple">
+                            @foreach (var item in Model.publishers)
+                            {
+                                <option value="@item.Publisher_Id">@item.Publisher_Name</option>
+
+                            }
+                        </select>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-2">
+                        <button type="reset" class="btn btn-default" onclick="GetPageData(1)">Reset</button>
+                    </div>
+                    &nbsp;
+                    &nbsp; &nbsp;
+                    <div class="col-md-2">
+                        <input type="button" class="btn btn-default" value="Add Books" onclick="PopInsertBooks()" />&nbsp; &nbsp;
+                    </div>
+                    <div class="col-md-1">
+
+                    </div>
+                    <div class="col-md-2">
+                        @*<button class="btn btn-default">*@
+                        @Html.ActionLink("Issue Books", "Issue", "IssueBook", Model, new { @class = "btn btn-default" })
+                        @*@Html.ActionLink("Click Me", "Action", "Controller", new { @class = "btn btn-primary" })
+            </button>*@
+                    </div>
+                </div>
+            </div>
+
+            <br />
+
+        </div>
+    </form>
+
+
+    <div class="modal fade" id="myPopUpForms">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title"><center><b>Add Or Edit Book Records</b></center></h3>
+                </div>
+                <div class="modal-body">
+                  <center>
+                        <div class="c">
+                            <form id="bookform">
+                                @Html.AntiForgeryToken()
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                <table>
+                                    <tr>
+                                        @Html.Hidden("Book_Id", Model.Book_Id)
+                                        <td><label>Book Name</label></td>
+                                        <td>
+                                            @Html.TextBoxFor(Model => Model.Book_Name, null, new { @class = "form-control", @placeholder = "Enter Book Name ", @id = "Book_Name" })
+                                            @Html.ValidationMessageFor(model => model.Book_Name, "", new { @class = "text-danger" })
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>Book Pages</label></td>
+                                        <td>
+                                            @Html.TextBoxFor(Model => Model.Book_Pages, null, new { @class = "form-control", @placeholder = "Enter Book Pages ", @id = "Book_Pages" })
+                                            @Html.ValidationMessageFor(model => model.Book_Pages, "", new { @class = "text-danger" })
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>Book Price</label></td>
+                                        <td>
+                                            @Html.TextBoxFor(Model => Model.Book_Price, null, new { @class = "form-control", @placeholder = "Enter Book Price ", @id = "Book_Price" })
+                                            @Html.ValidationMessageFor(model => model.Book_Price, "", new { @class = "text-danger" })
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>Categorie</label></td>
+                                        <td>
+                                            @Html.DropDownListFor(Model => Model.categoryid,new SelectList(Model.categories, "Category_Id", "Category_Name"), "Select", new { @id = "Category_Name", @class = "myclass" })
+                                            @Html.ValidationMessageFor(model => model.categoryid, "", new { @class = "text-danger" })
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>Publisher</label></td>
+                                        <td>
+                                            @Html.DropDownListFor(Model => Model.publisherid, new SelectList(Model.publishers, "Publisher_Id", "Publisher_Name"), "Select", new { @id = "Publisher_Name", @class = "myclass" })
+                                            @Html.ValidationMessageFor(model => model.publisherid, "", new { @class = "text-danger" })
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>Is Active</label></td>
+                                        <td>
+                                            @Html.CheckBoxFor(Model => Model.IsActive, new { @checked = Model.IsActive, @id = "IsActive", @class = "myclass" })
+                                        </td>
+                                    </tr>
+                                    <tr><td></td></tr>                                 
+                                </table>
+                            </form>
+                        </div>
+                    </center>
+                </div>
+                <br />
+                <div class="modal-footer">
+                    <button type="submit" id="AddBook" class="btn btn-default">Save</button>
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                </div>
+            </div>
+            </div>
+        </div>
+
+
+    <hr />
+    <div>
+        <h1 class="h">Books Details</h1>
+
+        <div id="BookList">
+
+        </div>
+        <div id="paged">
+
+
+        </div>
+    </div>
+    <div class="modal fade" id="myModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title">Delete Book Record</h3>
+                </div>
+                <div class="modal-body">
+
+                    <h4>Are you sure ? You want to delete : </h4> <h4 id="bname"></h4>
+
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <a href="#" class="btn btn-danger" onclick="DeleteBook()">Confirm</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="hiddenBookId" />
+    <input type="hidden" id="hiddenBookName" />
+</body>
+</html>

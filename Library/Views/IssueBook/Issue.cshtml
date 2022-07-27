@@ -1,0 +1,352 @@
+﻿
+@using Library.Models;
+@model BooksViewModule
+@using PagedList
+@using PagedList.Mvc
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    @Styles.Render("~/Content/css")
+
+    <style>
+        .ct {
+            width: auto;
+        }
+
+        .c {
+            margin: auto;
+            width: 60%;
+        }
+
+        .active:active {
+            color: black
+        }
+
+        .link-dark {
+            color: black;
+        }
+
+            .link-dark:hover {
+                color: black;
+                text-decoration: none;
+            }
+
+        ul#menu li {
+            display: inline-block;
+        }
+
+        .h {
+            text-align: center;
+        }
+
+
+        .modal-dialog {
+            width: 50%;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+
+    @*<script src="~/Scripts/jquery.validate.min.js"></script>
+        <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+        <script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>*@
+    <script>
+
+        $(function () {
+            $('#CatList').multiselect({
+                includeSelectAllOption: true
+            });
+
+            $('#PubList').multiselect({
+                includeSelectAllOption: true
+            });
+        });
+
+        function PopInsertBooks() {
+            $("#myPopUpForms").modal('show');
+        }
+
+        var optionsVal = [];
+        var IssuedBook_ID = [];
+        $(document).ready(function () {
+            GetPageData(1);
+            $("#Book_Name").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+
+            })
+
+            $("#CatList").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+            $("#PubList").change(function () {
+                $("#pagenumber").val(1);
+                GetPageData(1);
+            })
+
+            $("#InsertIssuedBooks").click(function () {
+
+                InsertIssuedBooks();
+
+            })
+
+        })
+
+        function InsertIssuedBooks()
+        {
+            alert("Record Inserted");
+            var UserId ="";
+            var customers = new Array();
+            var quantity = new Array();
+            $("#table tr").each(function () {
+                var row = $(this);
+                var Book_Id = row.find("td").eq(0).html();
+                var Quantity = $(this).find("td:eq(6) input[type='number']").val();        
+                quantity.push(Quantity);
+                customers.push(Book_Id);
+            });
+
+            UserId = $("#UserId").val();
+
+            var IssueDate = $('#IssueDate').val();
+
+            $.ajax({
+                type: "POST",
+                url: "/IssueBook/InsertIssuedBooks",
+                data: JSON.stringify({ 'UserId': UserId, 'Book_Id': customers, 'Quantity': quantity, "IssueDate": IssueDate }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (r) {
+                    alert("Record Inserted");
+                }
+            });
+        
+        }
+     
+
+        function abc(id) {
+
+            $.ajax({
+                url: '/Books/InsertBooks/' + id,
+                method: 'get',
+                contentType: 'application/json',
+                success: function (resp) {
+                    console.log(resp);
+
+
+                    //Code to check duplicate row
+                    var contents = resp.Book_Id;
+                        duplicates = false;
+                    $("#table td").each(function () {
+                        var tdContent = $(this).text();
+                        if (contents==tdContent) {
+                            duplicates = true;
+                            return false;
+                        }
+                        contents[tdContent] = true;
+                    });
+                    if (duplicates) {
+                        alert("Duplicate Record");
+                    }
+                    else {
+                        $('#table').append("<tr><td>" + resp.Book_Id + "</td><td>" + resp.Book_Name + "</td><td>" + resp.Book_Pages + "</td><td>" + resp.Book_Price + "</td><td>" + resp.Category_Name + "</td><td>" + resp.Publisher_Name + "</td><td><center>" + "<input type='Number' id='quntity' value='1' style='width:60px;'/>" + "</center></td><td><center>" + '<button class="btn btn-danger" class="delete-row vraag1"  onClick="Remove(' + resp.Book_Id + ')">X</button>' + "</center></td></tr>");
+
+                    }
+
+                }
+            });
+
+
+        }
+
+
+        //Code for Remove records form table
+        function Remove(id) {
+            $("#table").find("td:contains('" + id + "')").closest('tr').remove();
+        }
+
+
+       
+
+        function GetPageData(pageNum, rowofpages) {
+
+            var CatSelected = $("#CatList option:selected");
+            var PubSelected = $("#PubList option:selected");
+            var Category = "";
+            var Publisher = "";
+            var Cat = [];
+            var Pub = [];
+
+            CatSelected.each(function () {
+                Cat.push($(this).val());
+            });
+
+            PubSelected.each(function () {
+                Pub.push($(this).val());
+            });
+            var Book_Name = $("#Book_Name").val();
+            var rowofpages = $("#rowofpages").val();
+            var pagenumber = $("#pagenumber").val();
+            $("#paged").empty();
+            var st = { "Book_Name": Book_Name, "MCategories": Cat.toString(), "MPublishers": Pub.toString(), "pagenumber": pagenumber, "rowofpages": rowofpages };
+            $.ajax({
+                url: '/IssueBook/GetPaggedData',
+                method: 'post',
+                data: JSON.stringify(st),
+                contentType: 'application/json',
+                success: function (resp) {
+                    $("#IssueBookList").html(resp);
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div>
+        <form>
+            <div class="c">
+                <div class="c table">
+                    <div class="row">
+                        <div class="col-md-3">Issue Date : </div>
+                        <div class="col-md-4">
+                            @Html.TextBoxFor(model => model.IssueDate, new { @type = "date", @id="IssueDate", @class = "form-control datepicker", @Value = Model.IssueDate.ToString("dd-MM-yyyy") })
+                        </div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div class="col-md-3">User Id:</div>
+                        <div class="col-md-2">@Html.TextBoxFor(m => m.UserId, new { @id = "UserId", @class = "myclass" })</div>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="row">
+                        <center>
+                            <div class="col-md-9">
+                                <input type="button" class="btn btn-default" value="Issue Books" onclick="PopInsertBooks()" />
+                            </div>
+                        </center>
+                    </div>
+                </div>
+                <br />
+            </div>
+        </form>
+    </div>
+    <br /><br />
+    @*<center><h1>Books List</h1></center>
+        <br />*@
+    <table class="c table table-bordered table-hover" id="htmlTableValue" border="1">
+        <thead text-align="center">
+            <tr>
+                <th>Book_Id</th>
+                <th>Book_Name</th>
+                <th>Book_Pages</th>
+                <th>Book_Price</th>
+                <th>Category</th>
+                <th>Publisher</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table">
+        </tbody>
+    </table>
+    <br /><br /><br>
+                <center>
+                    <button class="btn btn-success" id="InsertIssuedBooks">Save</button>
+                </center>
+
+    @*Popup Form*@
+    <div class="modal fade ct" id="myPopUpForms">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title"><center><b>Search Books To Add List</b></center></h3>
+                </div>
+                <div class="modal-body">
+                    <center>
+                        <div>
+                            <form>
+                                <div class="c">
+                                    <div class="c table">
+                                        @*<div class="row">
+                                                <div class="col-md-3">No. of Rows:</div>
+                                                <div class="col-md-2">@Html.DropDownList("Select", Model.rownumbers, new { @id = "rowofpages", @class = "myclass" })</div>
+                                            </div>*@
+                                        <br />
+                                        <div class="row">
+                                            <div class="col-md-4">Book_Name:</div>
+                                            <div class="col-md-2">@Html.TextBoxFor(m => m.Book_Name, new { @id = "Book_Name", @class = "myclass" })</div>
+                                        </div>
+                                        <br />
+                                        <div class="row">
+                                            <div class="col-md-4"><label>Category</label></div>
+                                            <div class="col-md-2">
+                                                <select id="CatList" multiple="multiple">
+                                                    @foreach (var item in Model.categories)
+                                                    {
+                                                        <option value="@item.Category_Id">@item.Category_Name</option>
+
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br />
+                                        <div class="row">
+                                            <div class="col-md-4">Publisher:</div>
+                                            <div class="col-md-2">
+                                                @Html.HiddenFor(model => model.pagenumber)
+                                                <select id="PubList" multiple="multiple">
+                                                    @foreach (var item in Model.publishers)
+                                                    {
+                                                        <option value="@item.Publisher_Id">@item.Publisher_Name</option>
+
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br />
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <button type="reset" class="btn btn-default" onclick="GetPageData(1)">Reset</button>
+                                            </div>
+                                            <div class="col-md-1">
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <br />
+
+                                </div>
+                            </form>
+                        </div>
+                        <div id="IssueBookList" style="width:auto;">
+
+                        </div>
+                    </center>
+                </div>
+                <br />
+                <div class="modal-footer">
+                    @*<button type="submit" id="AddToList" class="btn btn-default">Add To List</button>*@
+                    <a href="#" class="btn btn-default" data-dismiss="modal">OK</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

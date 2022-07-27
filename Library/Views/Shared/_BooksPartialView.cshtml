@@ -1,0 +1,36 @@
+﻿
+<table class="c table table-bordered table-hover" border="1">
+    <thead>
+        <tr>
+            <th>Book_Id</th>
+            <th>Book_Name</th>
+            <th>Book_Pages</th>
+            <th>Book_Price</th>
+            <th>Category</th>
+            <th>Publisher</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.booklist)
+        {
+        <tr>
+            <td>@item.Book_Id</td>
+            <td>@item.Book_Name</td>
+            <td>@item.Book_Pages</td>
+            <td>@item.Book_Price</td>
+            <td>@item.Category_Name</td>
+            <td>@item.Publisher_Name</td>
+            <td>
+                @*<button type='button' class='btn btn-default'><a class='link-dark' href='/Books/InsertBooks/@item.Book_Id'>Edit</a></button> &nbsp; &nbsp;*@
+                <button type='button' class='btn btn-default' onclick="Edit('@item.Book_Id')">Edit</button> &nbsp; &nbsp;
+                <button type="button" class="btn btn-default" onclick="ConfirmDelete('@item.Book_Id','@item.Book_Name')">Delete</button>
+            </td>
+            <input type="hidden" value="@item.TotalRecords" id="totalrecords" />
+            <input type="hidden" value="@item.RowNumbers" id="rowumbers" />
+            <input type="hidden" value="@item.rowofpages" id="rowofpages" />
+        </tr>
+        }
+    </tbody>
+</table>
+

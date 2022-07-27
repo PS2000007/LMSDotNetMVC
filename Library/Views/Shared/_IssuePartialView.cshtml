@@ -1,0 +1,38 @@
+﻿
+
+<table class="c table table-bordered table-hover" border="1">
+    <thead>
+        <tr>
+            <th>Book_Id</th>
+            <th>Book_Name</th>
+            <th>Book_Pages</th>
+            <th>Book_Price</th>
+            <th>Category</th>
+            <th>Publisher</th>
+            <th>Select</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.booklist)
+        {
+        <tr>
+            <td>@item.Book_Id</td>
+            <td>@item.Book_Name</td>
+            <td>@item.Book_Pages</td>
+            <td>@item.Book_Price</td>
+            <td>@item.Category_Name</td>
+            <td>@item.Publisher_Name</td>
+        <td>    
+            <center>
+                <button class="btn btn-success" onclick="abc(@item.Book_Id)">Add To List</button>
+            </center>
+        </td>
+   
+            @*<input type="hidden" value="@item.TotalRecords" id="totalrecords" />
+            <input type="hidden" value="@item.RowNumbers" id="rowumbers" />
+            <input type="hidden" value="@item.rowofpages" id="rowofpages" />*@
+        </tr>
+        }
+    </tbody>
+</table>
+
